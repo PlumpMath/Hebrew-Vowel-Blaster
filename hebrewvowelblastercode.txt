@@ -1,0 +1,501 @@
+-- title:  Vowel Invaders
+
+-- author: Zachary Goldsmith
+
+-- desc:   Hebrew vowel teaching game?
+
+-- script: lua
+
+
+--yeaah...it a bit messy. It's a small game that works. *shrugs sholders
+function init()
+	player={
+		x=(8*15),
+
+		y=8*14
+,
+		lives=3	
+		}
+  
+
+	effect=0
+
+	prjctl={
+	
+		x=6,
+	
+		y=8*14,
+
+		fired=0,
+	
+		hit=0
+	
+		}
+
+	enemyProjectile={}
+	for i=1,10 do
+		enemyProjectile[i] = {
+				x=0,
+				y=0,
+				fired=0
+				}
+	end
+
+
+	ammoData={
+		
+			x=(8*12),
+		
+			type=375
+		
+			}
+ 
+	
+		vowel={ah=0,ahh=0,eh=0,ehh=0,oo=0,i=0,sprt=0,done=0,xmax=0,xmin=0,ymax=0,ymin=0}
+		xmax=10 xmin=1 ymax=6 ymin=1
+
+	eKilled=0
+
+	enemy={}
+	for i=xmin-1,xmax+1 do
+		enemy[i] = {}
+		for j=ymin-1,ymax+1 do
+		enemy[i][j]={
+				x=(8*i)+8,
+				y=(8*j)+8,
+				dx=1,
+				dy=1,
+				sprt = vowel.sprt + 311
+				}
+		end
+	end
+
+	for j=ymin,ymax do
+		vowel.done=0
+		while vowel.done==0 do
+			vowel.sprt=math.random(0,5)
+			if vowel.sprt==0 and vowel.ah==0
+				then vowel.ah=1 vowel.done=1
+			end
+			if vowel.sprt==1 and vowel.ahh==0
+				then vowel.ahh=1 vowel.done=1
+			end
+			if vowel.sprt==2 and vowel.eh==0
+				then vowel.eh=1 vowel.done=1
+			end
+			if vowel.sprt==3 and vowel.ehh==0
+				then vowel.ehh=1 vowel.done=1
+			end
+			if vowel.sprt==4 and vowel.oo==0
+				then vowel.oo=1 vowel.done=1
+			end
+			if vowel.sprt==5 and vowel.i==0
+				then vowel.i=1 vowel.done=1
+			end
+		end
+		for i=xmin,xmax do
+			enemy[i][j].sprt = vowel.sprt + 311
+		end
+	end
+	
+	eBehavior={
+			descent=0,
+			plunge=0,
+			normal=1,
+			splitRows=0,
+			splitColumns=0,
+			cnt=0,
+			Xreset=8,
+			Yreset=8,
+			Rcnt=0
+			}
+	gameover=0
+
+end
+
+start=0
+score=0
+round=0
+
+init()
+
+function TIC()
+	if start==0
+		then 
+		cls()
+		meh=8*2
+		print("Welcome to Hebrew Vowel Blaster",8*3,8*5-meh,6)
+		print("Press Z and X to start",8*6,8*7-meh,2)
+		print("Use the left and right arrow keys to move",8*1,8*9-meh)
+		print("Press the up arrow key to shoot",8*3,8*11-meh)
+		print("Use Z and X to change ammo",8*5,8*13-meh)
+		print("Made by Zachary Goldsmith",0,8*15-meh,9)
+		print("for the 2017 Game Off jam",0,8*16-meh,9)
+		if btn(4) and btn(5)
+			then start=1
+		end
+ 
+	end
+	if gameover==0 and start==1
+		then 
+		cls(0)
+ 
+		map(30,0,30,17)
+
+		movePlayer()
+		moveEnemies()
+		drawEnemies()
+		ammo()
+		enemyFired()
+		print("score:",0,0)
+		print(score,8*5,0)
+		print("lives:",8*15,0)
+		print(player.lives,8*20,0)
+		print("round:",0,8*15)
+		print(round,8*5,8*15)
+	end
+	if eKilled==60
+		then
+		eKilled=0
+		round=round+1
+		init()
+	end
+
+	if gameover==1 and effect==0
+		then
+		cls()
+		print("You ran out of lives.",8*2,8*5)
+		print("Your score is: ",8*2,8*6) print(score,8*12,8*6)
+		print("Rounds survived:",8*2,8*7) print(round,8*14,8*7)
+		print("Press z and x to restart.",8*2,8*8)
+		if btn(4) and btn(5)
+			then gameover=0 score=0 round=0 init()
+		end
+	end
+end
+
+
+function movePlayer()
+
+	--0 is up, 1 is down, 4 is z, 5 is x
+
+ 
+	
+if btn(2) and player.x>(8*1)
+ 
+		then player.x=player.x-1
+ 
+	end
+
+
+
+	if btn(3) and player.x<(8*28)
+
+		then player.x=player.x+1
+ 
+	end
+
+	
+
+	if btn(0) and prjctl.fired==0
+ 
+		then prjctl.fired=1 prjctl.x=player.x prjctl.y=player.y
+ 
+	end
+
+
+
+	if prjctl.fired==1 
+		
+		then spr(259,prjctl.x,prjctl.y,0) fire()
+	
+	end
+
+
+
+	spr(258,player.x,player.y,0)
+
+end
+
+
+function fire()
+
+
+	prjctl.fired=1
+
+	prjctl.y=prjctl.y-4
+
+
+	if prjctl.y<8
+
+		then prjctl.y=8*16 prjctl.fired=0
+
+	end
+
+
+	enemyHit()
+
+end
+
+
+
+function drawEnemies()
+	for i=xmin,xmax do
+		for j=ymin,ymax do 
+			spr(enemy[i][j].sprt, enemy[i][j].x,enemy[i][j].y,0)
+		end
+	end
+end
+
+function moveEnemies()
+	local Rnum
+	--normal behavior
+		if eBehavior.normal==1 and eBehavior.splitRows==0
+			then Rnum=math.random(250)
+		end
+
+	if Rnum==100 and eBehavior.normal==1 or Rnum==99 and eBehavior.normal==1 or Rnum==98 and eBehavior.normal==1
+		then L_or_R=0
+		for i=xmin,xmax do
+			for j=ymin,ymax do 
+				enemy[i][j].dx=0
+			end
+		end
+	end
+	
+
+
+	--row spliting
+	if Rnum==3 and eBehavior.splitRows==0
+		then eBehavior.splitRows=1 eBehavior.normal=0 eBehavior.Xreset=math.random(16,19*8)
+		for j=ymin,ymax do
+			Rnum=math.random(-1,1)
+			for i=xmin,xmax do 
+				enemy[i][j].dx=Rnum
+			end
+		end
+	end
+	
+	if eBehavior.splitRows==1 and eBehavior.Rcnt<250
+		then eBehavior.Rcnt=eBehavior.Rcnt+1
+		for j=ymin,ymax do 
+			for i=xmin,xmax do
+				if mget(((enemy[i][j].x+7)//8)+30,(enemy[i][j].y//8))==5 and enemy[i][j].dx==1 and enemy[i][j].sprt~=0
+					then
+					for i=xmin,xmax do
+						enemy[i][j].dx=-1
+					end
+				end
+			end
+		end
+		for j=ymin,ymax do 
+			for i=xmin,xmax do
+				if mget(((enemy[i][j].x)//8)+30,(enemy[i][j].y//8))==5 and enemy[i][j].dx==-1 and enemy[i][j].sprt~=0
+					then
+					for i=xmin,xmax do
+						enemy[i][j].dx=1
+					end
+				end
+			end
+		end
+		for i=xmin,xmax do
+
+			for j=ymin,ymax do
+				enemy[i][j].x=enemy[i][j].x + enemy[i][j].dx
+			end
+		end
+	end
+		--reset
+	if eBehavior.splitRows==1 and eBehavior.Rcnt>=250
+		then	
+		for j=ymin,ymax do 
+			for i=xmin,xmax do
+				enemy[i][j].x=enemy[i][j].x + enemy[i][j].dx
+				if enemy[1][j].x<eBehavior.Xreset
+					then enemy[i][j].dx=1
+				end
+				if enemy[1][j].x>eBehavior.Xreset
+					then enemy[i][j].dx=-1
+				end
+				if enemy[1][j].x==eBehavior.Xreset
+					then enemy[i][j].dx=0
+				end
+			end		
+		end
+		local cnt=0
+		for j=ymin, ymax do
+			if enemy[1][j].x==eBehavior.Xreset
+				then cnt=cnt+1
+			end
+			if cnt==6
+				then eBehavior.splitRows=0 eBehavior.normal=1 eBehavior.Rcnt=0
+				for j=ymin,ymax do 
+					for i=xmin,xmax do
+						enemy[i][j].dx=0
+					end		
+				end
+			end
+		end
+	end	
+end
+
+function enemyFired()
+	local shoot=0
+	local shoot_x=0
+	local shoot_y=0
+	shoot=math.random(1,500)
+	if shoot<11
+		then
+		for j=ymin,ymax do
+			if enemy[shoot][j].sprt~=0 and shoot_y<enemy[shoot][j].y
+				then 
+				shoot_y=enemy[shoot][j].y 
+				shoot_x=enemy[shoot][j].x
+			end
+		end
+		if shoot_x~=0 and shoot_y~=0 and enemyProjectile[shoot].fired==0
+			then 
+			enemyProjectile[shoot].x=shoot_x
+			enemyProjectile[shoot].y=shoot_y+8
+			enemyProjectile[shoot].fired=1
+		end
+	end
+	--code for when the player is shot
+	for i=1,10 do
+		if enemyProjectile[i].fired==1 and enemyProjectile[i].y<14*8
+			then enemyProjectile[i].y=enemyProjectile[i].y+1 spr(259,enemyProjectile[i].x,enemyProjectile[i].y,0)
+		end
+		if enemyProjectile[i].fired==1 and enemyProjectile[i].y>=14*8
+			then enemyProjectile[i].y=0 enemyProjectile[i].x=0 enemyProjectile[i].fired=0
+		end
+		if enemyProjectile[i].x>=player.x-4 and enemyProjectile[i].x<=player.x+4 and enemyProjectile[i].y>=player.y-4
+			then player.lives=player.lives-1 enemyProjectile[i].y=0 enemyProjectile[i].x=0 enemyProjectile[i].fired=0 effect=30 sfx(0,0,30)
+		end
+	end
+	if effect~=0
+		then effect=effect-1 spr(261+math.random(0,1),player.x,player.y,0)
+	end
+	if player.lives<=0 and effect==0
+		then gameover=1
+	end
+end
+
+function enemyHit()
+	
+--375=AH, 376=EH, 377=OO, 378=I
+
+	for i=xmin,xmax do
+
+		for j=ymin,ymax do
+			matchHit=0
+
+			if enemy[i][j].sprt==311 and ammoData.type==375
+
+				then matchHit=1
+
+			end
+		
+
+			if enemy[i][j].sprt==312 and ammoData.type==375
+
+				then matchHit=1
+
+			end
+
+
+			if enemy[i][j].sprt==313 and ammoData.type==376
+
+				then matchHit=1
+
+			end
+
+
+			if enemy[i][j].sprt==314 and ammoData.type==377
+
+				then matchHit=1
+
+			end
+
+
+			if enemy[i][j].sprt==315 and ammoData.type==376
+
+				then matchHit=1
+
+			end
+
+
+			if enemy[i][j].sprt==316 and ammoData.type==378
+
+				then matchHit=1
+
+			end
+
+
+			if prjctl.x>=enemy[i][j].x-4 and prjctl.x<=enemy[i][j].x+4 and prjctl.y<=enemy[i][j].y+7 and matchHit==1
+
+				then enemy[i][j].sprt=0 prjctl.y=8*16 prjctl.fired=0 score=score+10 eKilled=eKilled+1
+			end
+
+
+			if prjctl.x>=enemy[i][j].x-4 and prjctl.x<=enemy[i][j].x+4 and prjctl.y<=enemy[i][j].y+7 and matchHit==0 and enemy[i][j].sprt~=0
+
+				then prjctl.y=8*16 prjctl.fired=0 score=score-2
+  			end
+
+			if score<0
+				then score=0
+			end
+		end
+	end					
+	
+
+end
+
+
+
+
+function ammo()
+	
+
+	for i=0,3,1 do
+		
+		spr(359+i,(i*12)+(8*12),8*16,0)
+	
+	end
+	
+
+	if btnp(5) 
+		
+		then ammoData.x=ammoData.x+12 ammoData.type=ammoData.type+1
+ 
+	end
+	
+
+	if ammoData.type>378
+
+		then ammoData.x=(8*12) ammoData.type=375
+
+	end
+
+
+	if btnp(4)
+ 
+		then ammoData.x=ammoData.x-12 ammoData.type=ammoData.type-1
+ 
+	end
+
+
+	if ammoData.type<375
+
+		then ammoData.x=(3*12)+(8*12) ammoData.type=378
+
+	end
+
+
+	spr(ammoData.type,ammoData.x,8*16,0)
+
+	spr(297,(8*10)+4,8*16,0)
+
+	spr(298,8*18,8*16,0)
+
+end
